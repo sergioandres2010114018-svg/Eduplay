@@ -1,0 +1,14 @@
+rules_version = '2';
+// Reglas de Firebase Storage: fotos y videos de la biblioteca (máx. 20 MB).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /biblioteca/{archivo} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.size < 20 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*'));
+      allow update, delete: if false;
+    }
+  }
+}

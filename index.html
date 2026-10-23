@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#13235B">
+<meta name="description" content="EduPlay: app educativa gamificada para estudiantes de 9°, 10° y 11°. Aprende jugando, supera cada reto.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<title>EduPlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: app de una columna tipo móvil (máx 560px) con barra inferior fija; login a pantalla completa con foto/composición de fondo */
+:root{
+  --navy:#13235B; --blue:#1E6FD9; --green:#4FA52E; --yellow:#F2B400; --red:#E0352B;
+  --bg:#F3F6FC; --surface:#FFFFFF; --surface-2:#E8EEF9; --line:#D3DCEE;
+  --fg:#13203F; --muted:#5A6788; --on-accent:#FFFFFF;
+  --ok-bg:#E3F4DA; --ok-fg:#2D6E14; --bad-bg:#FDE4E2; --bad-fg:#A3241C;
+  --nav-bg:#FFFFFF;
+  --f-display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:14px; --r-sm:10px;
+  --foto-login:none; /* Reemplazar por url("…") con la foto del fondo del login */
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1430; --surface:#14204A; --surface-2:#1B2A5C; --line:#2A3B74;
+  --fg:#EAF0FF; --muted:#A3B1D6; --blue:#4D92F0; --green:#6CC248;
+  --ok-bg:#183D17; --ok-fg:#A8E08C; --bad-bg:#4A1A1A; --bad-fg:#FFB0A8; --nav-bg:#111B40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1430; --surface:#14204A; --surface-2:#1B2A5C; --line:#2A3B74;
+  --fg:#EAF0FF; --muted:#A3B1D6; --blue:#4D92F0; --green:#6CC248;
+  --ok-bg:#183D17; --ok-fg:#A8E08C; --bad-bg:#4A1A1A; --bad-fg:#FFB0A8; --nav-bg:#111B40; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balance;font-weight:600}
+h1{font-size:1.75rem} h2{font-size:1.3rem} h3{font-size:1.05rem}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+
+/* ---------- LOGIN ---------- */
+#auth{min-height:100%;position:relative;display:grid;place-items:center;padding-block:28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow:hidden;background:#0E1A45;color:#EAF0FF}
+.auth-bg{position:absolute;inset:0;z-index:0;
+  background:
+    linear-gradient(180deg,rgba(10,20,55,.55),rgba(10,20,55,.88)),
+    var(--foto-login),
+    radial-gradient(60% 50% at 12% 18%,rgba(30,111,217,.75),transparent 70%),
+    radial-gradient(50% 45% at 92% 12%,rgba(79,165,46,.6),transparent 70%),
+    radial-gradient(45% 40% at 85% 92%,rgba(242,180,0,.45),transparent 70%),
+    radial-gradient(40% 35% at 5% 95%,rgba(224,53,43,.4),transparent 70%),
+    #0E1A45;
+  background-size:cover;background-position:center}
+.auth-bg canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+.auth-card{position:relative;z-index:1;width:100%;max-width:420px;background:rgba(255,255,255,.97);color:#13203F;border-radius:22px;padding:24px 22px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.auth-logo{display:block;width:150px;margin:-4px auto 6px}
+.slogan{text-align:center;font-family:var(--f-display);color:#13235B;font-weight:600;font-size:1rem;margin-bottom:16px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#E8EEF9;border-radius:12px;padding:4px;margin-bottom:16px}
+.seg button{border:0;background:transparent;padding:9px;border-radius:9px;font-weight:700;color:#5A6788}
+.seg button[aria-selected="true"]{background:#fff;color:#13235B;box-shadow:0 1px 3px rgba(19,35,91,.2)}
+.form{display:grid;gap:12px}
+.field{display:grid;gap:5px}
+.field label{font-weight:600;font-size:.88rem}
+.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1.5px solid #CBD5EA;border-radius:var(--r-sm);background:#fff;color:#13203F}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#1E6FD9;outline:none;box-shadow:0 0 0 3px rgba(30,111,217,.18)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:.82rem;color:#4A5675}
+.check input{margin-top:3px;accent-color:#1E6FD9}
+.msg{font-size:.88rem;padding:9px 11px;border-radius:var(--r-sm)}
+.msg.err{background:#FDE4E2;color:#A3241C}
+.msg.ok{background:#E3F4DA;color:#2D6E14}
+.auth-foot{position:relative;z-index:1;text-align:center;font-size:.78rem;color:rgba(234,240,255,.8);margin-top:14px;max-width:420px}
+.auth-wrap{display:grid;justify-items:center;width:100%}
+
+/* ---------- BOTONES ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--blue);color:var(--on-accent);text-decoration:none;box-shadow:0 3px 0 rgba(19,35,91,.35);transition:transform .08s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(19,35,91,.35)}
+.btn.green{background:var(--green)} .btn.yellow{background:var(--yellow);color:#13203F} .btn.red{background:var(--red)}
+.btn.ghost{background:var(--surface-2);color:var(--fg);box-shadow:none}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.auth-card .btn{background:#1E6FD9}
+
+/* ---------- APP SHELL ---------- */
+#app{min-height:100%}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--navy);color:#fff}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:#13235B}
+.top-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top img{width:38px;height:34px;object-fit:cover;border-radius:9px;background:#fff}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.3rem;letter-spacing:.01em}
+.brand b{color:#7CD455;font-weight:700}
+.pts{margin-left:auto;display:flex;gap:6px;align-items:center;background:rgba(255,255,255,.12);padding:5px 10px;border-radius:999px;font-size:.85rem}
+.pts .star{color:var(--yellow)}
+main{max-width:560px;margin:0 auto;padding-block:18px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--nav-bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.nav button{border:0;background:transparent;padding:8px 2px 9px;display:grid;justify-items:center;gap:2px;font-size:.72rem;font-weight:600;color:var(--muted)}
+.nav button svg{width:23px;height:23px}
+.nav button[aria-current="page"]{color:var(--blue)}
+.nav button[aria-current="page"] svg{stroke-width:2.4}
+
+/* ---------- COMPONENTES ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.stack{display:grid;gap:12px}
+.hero{background:linear-gradient(135deg,var(--navy),#1C3A8F);color:#fff;border-radius:18px;padding:18px;display:grid;gap:12px;position:relative;overflow:hidden}
+.hero .lv{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hero .lvname{font-family:var(--f-display);font-size:1.5rem;font-weight:600}
+.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--yellow));border-radius:inherit}
+.bar.light{background:var(--surface-2)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;text-align:left;display:grid;gap:6px;align-content:start;min-width:0}
+.tile .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff}
+.tile .ic svg{width:21px;height:21px}
+.tile strong{font-family:var(--f-display);font-weight:600;font-size:1.02rem}
+.area-mat{--ac:#1E6FD9} .area-fis{--ac:#7A4FD9} .area-lec{--ac:#E0352B} .area-soc{--ac:#3E9A22}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;font-size:.86rem;color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue)}}
+.topic{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px}
+.topic .dot{width:10px;height:10px;border-radius:50%;background:var(--ac);flex:none}
+.topic .tx{min-width:0;flex:1}
+.topic .seen{font-size:.72rem;font-weight:700;color:var(--ok-fg);background:var(--ok-bg);padding:3px 8px;border-radius:999px}
+.sheet{border-left:5px solid var(--ac);}
+.example{background:var(--surface-2);border-radius:var(--r-sm);padding:12px;font-size:.92rem}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:var(--surface-2);color:var(--fg);font-weight:600;font-size:.85rem;text-decoration:none;border:1px solid var(--line)}
+.link svg{width:16px;height:16px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ctx{background:var(--surface-2);border-radius:var(--r-sm);padding:12px;font-size:.92rem;border-left:3px solid var(--muted)}
+.opts{display:grid;gap:9px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 12px;color:var(--fg)}
+.opt .k{font-family:var(--f-mono);font-weight:700;width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;flex:none;font-size:.85rem}
+.opt.sel{border-color:var(--blue)} .opt.sel .k{background:var(--blue);color:#fff}
+.opt.right{border-color:var(--green);background:var(--ok-bg)} .opt.right .k{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red);background:var(--bad-bg)} .opt.wrong .k{background:var(--red);color:#fff}
+.opt[disabled]{cursor:default}
+.fb{border-radius:12px;padding:12px}
+.fb.ok{background:var(--ok-bg);color:var(--ok-fg)} .fb.bad{background:var(--bad-bg);color:var(--bad-fg)}
+.fb p{color:var(--fg);margin-top:4px}
+.timer{font-family:var(--f-mono);font-weight:700;background:var(--navy);color:#fff;border-radius:10px;padding:6px 10px}
+.timer.low{background:var(--red)}
+.qnav{display:flex;flex-wrap:wrap;gap:6px}
+.qnav button{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);font-family:var(--f-mono);font-size:.8rem;color:var(--fg)}
+.qnav button.done{background:var(--surface-2);border-color:var(--blue)}
+.qnav button.cur{background:var(--blue);color:#fff;border-color:var(--blue)}
+.badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.badge{display:grid;justify-items:center;gap:6px;text-align:center;padding:12px 6px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface)}
+.badge .medal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--bc,#999)}
+.badge .medal svg{width:24px;height:24px}
+.badge.locked{opacity:.45;filter:grayscale(1)}
+.badge strong{font-size:.8rem;line-height:1.2}
+.badge span{font-size:.7rem;color:var(--muted);line-height:1.25}
+.arow{display:grid;grid-template-columns:110px 1fr 46px;gap:10px;align-items:center;font-size:.88rem}
+.rank{display:grid;gap:6px}
+.rank li{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:9px 11px;border-radius:11px;background:var(--surface-2)}
+.rank li.me{outline:2px solid var(--blue)}
+.rank ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pos{font-family:var(--f-mono);font-weight:700;color:var(--muted)}
+.avatar{width:58px;height:58px;border-radius:16px;background:var(--yellow);color:#13203F;font-family:var(--f-display);font-weight:700;font-size:1.5rem;display:grid;place-items:center;flex:none}
+.media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.media{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);display:grid;min-width:0}
+.media img,.media video{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--surface-2);display:block;max-width:100%}
+.media .mb{padding:9px 10px;display:grid;gap:3px;min-width:0}
+.media .mb strong{font-size:.86rem;line-height:1.25;overflow-wrap:anywhere}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.lnk{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);text-decoration:none;color:var(--fg);min-width:0}
+.lnk .lic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);flex:none;color:var(--blue)}
+.lnk .lic svg{width:20px;height:20px}
+.lnk .tx{min-width:0;display:grid;gap:2px}
+.lnk .tx strong{font-size:.92rem;overflow-wrap:anywhere}
+.empty{border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;color:var(--muted);font-size:.9rem}
+.tutor-out{white-space:pre-wrap;background:var(--surface-2);border-radius:12px;padding:12px;font-size:.93rem;min-height:60px}
+.stat{display:grid;gap:2px}
+.stat b{font-family:var(--f-mono);font-size:1.35rem}
+.statrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fact{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.fact .big{font-family:var(--f-mono);font-weight:700;font-size:1.6rem;color:var(--red)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;font-weight:600;font-size:.9rem;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.inline-form{display:grid;gap:10px}
+.inline-form .field label{color:var(--fg)}
+.inline-form .field input,.inline-form .field select,.inline-form .field textarea{background:var(--surface);color:var(--fg);border-color:var(--line)}
+details.card summary{cursor:pointer;font-weight:700;font-family:var(--f-display);font-size:1.02rem}
+@media (max-width:380px){.badges{grid-template-columns:repeat(2,minmax(0,1fr))}.arow{grid-template-columns:90px 1fr 42px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.96);opacity:.6}100%{transform:none;opacity:1}}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+</style>
+<script src="js/config.js"></script>
+</head>
+<body>
+<!-- ================= LOGIN / REGISTRO ================= -->
+<section id="auth">
+  <div class="auth-bg" aria-hidden="true"><canvas id="bgfx"></canvas></div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <img class="auth-logo" src="assets/logo.jpg" alt="EduPlay">
+      <p class="slogan">Aprende jugando, supera cada reto</p>
+      <div class="seg" role="tablist">
+        <button id="tab-login" role="tab" aria-selected="true">Iniciar sesión</button>
+        <button id="tab-reg" role="tab" aria-selected="false">Registrarse</button>
+      </div>
+
+      <form id="f-login" class="form" novalidate>
+        <div class="field"><label for="l-user">Usuario</label><input id="l-user" autocomplete="username" placeholder="ej. ana.tovar" required></div>
+        <div class="field"><label for="l-pass">Contraseña</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+        <div id="l-msg" class="msg" hidden></div>
+        <button class="btn block" id="l-btn" type="submit">Entrar</button>
+        <p class="small" style="text-align:center;color:#5A6788">¿No tienes cuenta? <a href="#" id="go-reg" style="color:#1E6FD9;font-weight:700">Regístrate gratis</a></p>
+      </form>
+
+      <form id="f-reg" class="form" novalidate hidden>
+        <div class="field"><label for="r-name">Nombre completo</label><input id="r-name" autocomplete="name" required></div>
+        <div class="row2">
+          <div class="field"><label for="r-user">Usuario</label><input id="r-user" autocomplete="username" placeholder="3 a 20 letras" required></div>
+          <div class="field"><label for="r-grado">Grado</label>
+            <select id="r-grado"><option value="9">9°</option><option value="10">10°</option><option value="11" selected>11°</option></select></div>
+        </div>
+        <div class="field"><label for="r-inst">Institución educativa</label><input id="r-inst" value="I.E.T.D. Pijiño del Carmen"></div>
+        <div class="row2">
+          <div class="field"><label for="r-pass">Contraseña</label><input id="r-pass" type="password" autocomplete="new-password" placeholder="mín. 6" required></div>
+          <div class="field"><label for="r-pass2">Repetir</label><input id="r-pass2" type="password" autocomplete="new-password" required></div>
+        </div>
+        <label class="check"><input type="checkbox" id="r-ok"> <span>Autorizo el tratamiento de mis datos según la Ley 1581 de 2012. Si soy menor de edad, cuento con la autorización de mi acudiente.</span></label>
+        <div id="r-msg" class="msg" hidden></div>
+        <button class="btn block green" id="r-btn" type="submit">Crear mi cuenta</button>
+      </form>
+    </div>
+    <p class="auth-foot">Proyecto SENATIC · Centro Acuícola y Agroindustrial de Gaira · Pijiño del Carmen, Magdalena</p>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="app" hidden>
+  <header class="top"><div class="top-in">
+    <img src="assets/icon.jpg" alt="">
+    <span class="brand">Edu<b>Play</b></span>
+    <span class="pts mono"><span class="star">★</span><span id="hdr-pts">0</span> pts · N<span id="hdr-lv">1</span></span>
+  </div></header>
+  <main id="view"></main>
+  <nav class="nav" aria-label="Secciones"><div class="nav-in">
+    <button data-go="inicio" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+    <button data-go="aprender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg>Aprender</button>
+    <button data-go="retos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v5M4.5 12.5h5"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="14" r="1"/></svg>Retos</button>
+    <button data-go="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>Biblioteca</button>
+    <button data-go="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</button>
+  </div></nav>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* =========================================================
+   EduPlay · prototipo funcional (PMV)
+   Datos: usuarios y biblioteca en la base de datos del artifact (db);
+   respaldo en este dispositivo (localStorage) si no hay conexión/permiso.
+   APIs: tutor IA (sample), almacenamiento de fotos y videos (assets).
+   ========================================================= */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const AREAS = {
+  mat:{n:"Matemáticas", c:"#1E6FD9", ic:'<path d="M5 12h14M12 5v14"/><path d="M5 5l3 3M8 5L5 8"/>'},
+  fis:{n:"Física", c:"#7A4FD9", ic:'<circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/>'},
+  lec:{n:"Lectura crítica", c:"#E0352B", ic:'<path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>'},
+  soc:{n:"Sociales y ciudadanas", c:"#3E9A22", ic:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'}
+};
+const svg = (p, w=24) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+/* ---------------- CONTENIDOS POR GRADO Y ÁREA ---------------- */
+const TEMAS = [
+ {a:"mat",g:9,t:"Ecuaciones lineales",r:"Una ecuación lineal tiene la incógnita con exponente 1. Para resolverla se despeja la variable aplicando la misma operación a ambos lados del igual.",ej:"3x − 7 = 11 → 3x = 18 → x = 6"},
+ {a:"mat",g:9,t:"Sistemas de ecuaciones 2×2",r:"Dos ecuaciones con dos incógnitas. Se resuelven por sustitución, igualación o reducción (sumar o restar ecuaciones para eliminar una variable).",ej:"x + y = 10 y x − y = 4. Sumando: 2x = 14 → x = 7, y = 3"},
+ {a:"mat",g:9,t:"Teorema de Pitágoras",r:"En un triángulo rectángulo, el cuadrado de la hipotenusa es igual a la suma de los cuadrados de los catetos: c² = a² + b².",ej:"Catetos 6 y 8: c² = 36 + 64 = 100 → c = 10"},
+ {a:"mat",g:9,t:"Medidas de tendencia central",r:"Media: suma de datos dividida por la cantidad. Mediana: dato central de la lista ordenada. Moda: dato que más se repite.",ej:"4, 7, 7, 9, 13 → media 8, mediana 7, moda 7"},
+ {a:"mat",g:10,t:"Razones trigonométricas",r:"En un triángulo rectángulo: seno = opuesto/hipotenusa, coseno = adyacente/hipotenusa, tangente = opuesto/adyacente.",ej:"Triángulo 3-4-5 con ángulo θ opuesto al lado 3: sen θ = 3/5, cos θ = 4/5"},
+ {a:"mat",g:10,t:"Funciones lineales",r:"f(x) = mx + b. La pendiente m indica cuánto cambia y por cada unidad de x; b es el corte con el eje y.",ej:"f(x) = 2x + 3 → f(4) = 11; pendiente 2, corte en (0, 3)"},
+ {a:"mat",g:10,t:"Probabilidad básica",r:"Probabilidad = casos favorables / casos posibles. Su valor está entre 0 (imposible) y 1 (seguro).",ej:"Número par en un dado: {2,4,6} → 3/6 = 1/2"},
+ {a:"mat",g:11,t:"Funciones exponenciales y logaritmos",r:"El crecimiento exponencial multiplica por un factor fijo en cada periodo. El logaritmo responde a qué exponente se eleva la base para obtener un número.",ej:"log₂ 32 = 5 porque 2⁵ = 32"},
+ {a:"mat",g:11,t:"Introducción a la derivada",r:"La derivada mide la razón de cambio instantánea: la pendiente de la recta tangente a la curva en un punto.",ej:"f(x) = x² → f′(x) = 2x; en x = 3 la pendiente es 6"},
+ {a:"mat",g:11,t:"Técnicas de conteo",r:"Principio multiplicativo, permutaciones (importa el orden, n!) y combinaciones (no importa el orden).",ej:"Ordenar 4 libros en fila: 4! = 24 formas"},
+ {a:"fis",g:9,t:"Magnitudes y unidades",r:"Las magnitudes escalares tienen solo valor (masa, tiempo); las vectoriales tienen valor, dirección y sentido (velocidad, fuerza). El Sistema Internacional usa metro, kilogramo y segundo.",ej:"72 km/h ÷ 3,6 = 20 m/s"},
+ {a:"fis",g:9,t:"Movimiento rectilíneo uniforme",r:"En el MRU la velocidad es constante y la distancia recorrida es d = v · t.",ej:"Un bus a 15 m/s durante 8 s recorre 120 m"},
+ {a:"fis",g:10,t:"Caída libre y MRUA",r:"Con aceleración constante: v = v₀ + a·t y d = v₀·t + ½·a·t². En caída libre a = g ≈ 9,8 m/s² (≈10 para cálculos rápidos).",ej:"Desde el reposo, tras 3 s: v = 10 · 3 = 30 m/s"},
+ {a:"fis",g:10,t:"Leyes de Newton",r:"1) Inercia. 2) F = m · a. 3) A toda acción corresponde una reacción igual y opuesta.",ej:"Una caja de 4 kg con a = 3 m/s² necesita F = 12 N"},
+ {a:"fis",g:10,t:"Trabajo y energía",r:"Energía cinética Ec = ½·m·v²; energía potencial gravitatoria Ep = m·g·h. La energía se transforma pero se conserva.",ej:"2 kg a 5 m/s: Ec = ½ · 2 · 25 = 25 J"},
+ {a:"fis",g:11,t:"Ondas y sonido",r:"La velocidad de una onda es v = λ · f. El sonido es una onda mecánica: necesita un medio material para propagarse.",ej:"f = 5 Hz y λ = 2 m → v = 10 m/s"},
+ {a:"fis",g:11,t:"Electricidad: Ley de Ohm",r:"V = I · R. En serie las resistencias se suman; en paralelo el inverso de la total es la suma de los inversos.",ej:"12 V sobre 4 Ω → I = 3 A"},
+ {a:"lec",g:9,t:"Idea principal",r:"Es la afirmación más general que resume el texto; las demás ideas la explican, la ejemplifican o la apoyan.",ej:"Pregúntate: ¿de qué trata el texto y qué dice el autor sobre eso?"},
+ {a:"lec",g:9,t:"Tipos de texto",r:"Narrativo (cuenta hechos), descriptivo (cómo es algo), expositivo (explica), argumentativo (defiende una postura) e instructivo (indica pasos).",ej:"Una receta es un texto instructivo"},
+ {a:"lec",g:10,t:"Inferencias",r:"Inferir es deducir información que no está escrita pero que se apoya en pistas del texto.",ej:"“El andén estaba vacío y el tren salía a las 7:00; Marta llegó a las 7:05” → Marta perdió el tren"},
+ {a:"lec",g:10,t:"Conectores y cohesión",r:"Los conectores relacionan ideas: adición (además), contraste (sin embargo), causa (porque), consecuencia (por eso), ejemplo (por ejemplo).",ej:"“Estudió mucho; sin embargo, no aprobó”: relación de contraste"},
+ {a:"lec",g:11,t:"Tesis y argumentos",r:"La tesis es la postura del autor; los argumentos son las razones que la sostienen. Un buen lector identifica qué información fortalece o debilita la tesis.",ej:"Tesis: “los colegios deben mantener el uniforme”. Argumento: reduce la presión por la moda"},
+ {a:"lec",g:11,t:"Textos discontinuos",r:"Tablas, gráficas, infografías y avisos. Se leen relacionando datos; las conclusiones deben apoyarse solo en lo que muestran.",ej:"Si una tabla compara puntajes, no te dice por sí sola las causas de la diferencia"},
+ {a:"soc",g:9,t:"Constitución de 1991",r:"Define a Colombia como Estado social de derecho. Consagra derechos fundamentales, sociales y colectivos, y mecanismos para protegerlos como la acción de tutela.",ej:"El derecho a la vida (art. 11) es un derecho fundamental"},
+ {a:"soc",g:9,t:"Regiones naturales de Colombia",r:"Caribe, Andina, Pacífica, Orinoquía, Amazonía e Insular. Cada una tiene clima, economía y culturas propias.",ej:"El Magdalena y Pijiño del Carmen están en la región Caribe"},
+ {a:"soc",g:10,t:"Ramas del poder público",r:"Legislativa (hace las leyes: Congreso), ejecutiva (gobierna: Presidencia, gobernaciones, alcaldías) y judicial (administra justicia: cortes y jueces). Hay además órganos de control.",ej:"La Contraloría vigila el uso de los recursos públicos"},
+ {a:"soc",g:10,t:"Mecanismos de participación",r:"Voto, plebiscito, referendo, consulta popular, cabildo abierto, iniciativa legislativa y revocatoria del mandato.",ej:"Un alcalde puede convocar una consulta popular sobre un asunto del municipio"},
+ {a:"soc",g:11,t:"Conflicto armado y construcción de paz",r:"Colombia vivió décadas de conflicto armado. En 2016 el Gobierno y las FARC-EP firmaron el Acuerdo Final de Paz, con puntos sobre tierras, participación política, víctimas y drogas ilícitas.",ej:"La Comisión de la Verdad entregó su informe final en 2022"},
+ {a:"soc",g:11,t:"Pensamiento social y multiperspectividad",r:"Analizar un problema desde los intereses de distintos actores (comunidad, empresa, Estado) e identificar tensiones y consecuencias de cada decisión.",ej:"Un proyecto minero: empleo para unos, riesgo para el agua de otros"},
+];
+
+/* ---------------- BANCO DE PREGUNTAS (estilo Saber 11) ---------------- */
+const BANCO = [
+ // Matemáticas
+ {a:"mat",g:9,q:"Si 3x − 7 = 11, ¿cuál es el valor de x?",o:["6","4","18","4/3"],c:0,e:"Sumas 7 a ambos lados: 3x = 18. Divides entre 3: x = 6."},
+ {a:"mat",g:9,q:"Un triángulo rectángulo tiene catetos de 6 cm y 8 cm. ¿Cuánto mide la hipotenusa?",o:["14 cm","10 cm","12 cm","48 cm"],c:1,e:"c² = 6² + 8² = 36 + 64 = 100, así que c = 10 cm."},
+ {a:"mat",g:9,q:"Las notas de Juan son 4, 7, 7, 9 y 13 (sobre 20). ¿Cuál es la media?",o:["7","9","8","40"],c:2,e:"La suma es 40 y hay 5 datos: 40 ÷ 5 = 8."},
+ {a:"mat",g:9,q:"Si x + y = 10 y x − y = 4, entonces:",o:["x = 6, y = 4","x = 7, y = 3","x = 5, y = 5","x = 8, y = 2"],c:1,e:"Sumando las ecuaciones: 2x = 14, x = 7. Luego y = 10 − 7 = 3."},
+ {a:"mat",g:10,q:"¿Cuál es el valor de sen 30°?",o:["1/2","√3/2","1","√2/2"],c:0,e:"Es un valor notable: sen 30° = 1/2."},
+ {a:"mat",g:10,q:"En un triángulo rectángulo, el cateto opuesto a θ mide 3 y la hipotenusa 5. ¿Cuánto vale cos θ?",o:["3/5","3/4","4/5","5/4"],c:2,e:"El cateto adyacente mide 4 (triángulo 3-4-5). cos θ = adyacente/hipotenusa = 4/5."},
+ {a:"mat",g:10,q:"Si f(x) = 2x + 3, ¿cuánto es f(4)?",o:["9","11","14","8"],c:1,e:"f(4) = 2·4 + 3 = 8 + 3 = 11."},
+ {a:"mat",g:10,q:"Al lanzar un dado, ¿cuál es la probabilidad de obtener un número par?",o:["1/6","1/3","2/3","1/2"],c:3,e:"Hay 3 pares (2, 4, 6) entre 6 resultados posibles: 3/6 = 1/2."},
+ {a:"mat",g:11,q:"¿Cuánto es log₂ 32?",o:["5","4","16","6"],c:0,e:"2⁵ = 32, por tanto log₂ 32 = 5."},
+ {a:"mat",g:11,q:"Una población de 500 bacterias se duplica cada 3 horas. ¿Cuántas habrá a las 9 horas?",o:["1.500","3.000","4.000","2.000"],c:2,e:"En 9 horas hay 3 duplicaciones: 500 · 2³ = 4.000."},
+ {a:"mat",g:11,q:"Si f(x) = x², ¿cuál es la pendiente de la recta tangente en x = 3?",o:["9","6","3","2"],c:1,e:"f′(x) = 2x, entonces f′(3) = 6."},
+ {a:"mat",g:11,q:"¿De cuántas formas distintas se pueden ordenar 4 libros en un estante?",o:["16","12","8","24"],c:3,e:"Es una permutación: 4! = 4·3·2·1 = 24."},
+ // Física
+ {a:"fis",g:9,q:"Un carro viaja a 72 km/h. ¿Cuál es su rapidez en m/s?",o:["20 m/s","7,2 m/s","259 m/s","36 m/s"],c:0,e:"Se divide entre 3,6: 72 ÷ 3,6 = 20 m/s."},
+ {a:"fis",g:9,q:"Un bus avanza con MRU a 15 m/s durante 8 s. ¿Qué distancia recorre?",o:["23 m","120 m","1,9 m","60 m"],c:1,e:"d = v · t = 15 · 8 = 120 m."},
+ {a:"fis",g:9,q:"¿Cuál es la unidad de masa en el Sistema Internacional?",o:["Newton","Gramo","Kilogramo","Libra"],c:2,e:"La unidad base de masa en el SI es el kilogramo (kg). El newton es unidad de fuerza."},
+ {a:"fis",g:9,q:"¿Cuál de estas magnitudes es vectorial?",o:["Temperatura","Masa","Tiempo","Velocidad"],c:3,e:"La velocidad tiene valor, dirección y sentido; las otras solo tienen valor."},
+ {a:"fis",g:10,q:"Se deja caer una piedra desde el reposo (g = 10 m/s²). ¿Qué velocidad tiene a los 3 s?",o:["30 m/s","13 m/s","45 m/s","3,3 m/s"],c:0,e:"v = g · t = 10 · 3 = 30 m/s."},
+ {a:"fis",g:10,q:"¿Qué fuerza se necesita para acelerar una caja de 4 kg a 3 m/s²?",o:["7 N","1,3 N","12 N","0,75 N"],c:2,e:"Segunda ley de Newton: F = m · a = 4 · 3 = 12 N."},
+ {a:"fis",g:10,q:"Cuando empujas una pared, la pared te empuja con una fuerza…",o:["menor y en el mismo sentido","igual y en sentido opuesto","mayor y en sentido opuesto","nula, porque no se mueve"],c:1,e:"Tercera ley de Newton: acción y reacción son iguales en magnitud y opuestas en sentido."},
+ {a:"fis",g:10,q:"¿Cuál es la energía cinética de un balón de 2 kg que se mueve a 5 m/s?",o:["10 J","50 J","5 J","25 J"],c:3,e:"Ec = ½ · m · v² = ½ · 2 · 25 = 25 J."},
+ {a:"fis",g:11,q:"Una resistencia de 4 Ω se conecta a 12 V. ¿Qué corriente circula?",o:["48 A","3 A","0,33 A","16 A"],c:1,e:"Ley de Ohm: I = V / R = 12 / 4 = 3 A."},
+ {a:"fis",g:11,q:"Una onda tiene frecuencia de 5 Hz y longitud de onda de 2 m. ¿Cuál es su velocidad?",o:["2,5 m/s","7 m/s","10 m/s","0,4 m/s"],c:2,e:"v = λ · f = 2 · 5 = 10 m/s."},
+ {a:"fis",g:11,q:"En el espacio exterior (vacío) dos astronautas no pueden oírse sin radio porque:",o:["el sonido necesita un medio material para propagarse","el frío congela el sonido","la luz bloquea el sonido","el sonido viaja demasiado rápido"],c:0,e:"El sonido es una onda mecánica: necesita partículas (aire, agua, sólidos) que vibren."},
+ {a:"fis",g:11,q:"Dos resistencias de 3 Ω y 6 Ω se conectan en serie. ¿Cuál es la resistencia total?",o:["2 Ω","18 Ω","4,5 Ω","9 Ω"],c:3,e:"En serie se suman: 3 + 6 = 9 Ω. (En paralelo serían 2 Ω.)"},
+ // Lectura crítica
+ {a:"lec",g:9,ctx:"Las abejas y otros polinizadores intervienen en la producción de tres de cada cuatro tipos de cultivos alimentarios. El uso excesivo de plaguicidas y la pérdida de bosques han reducido sus poblaciones en muchas regiones.",q:"¿Cuál es la idea principal del texto?",o:["Las abejas producen miel de buena calidad","La disminución de los polinizadores pone en riesgo muchos cultivos","Los bosques son el hogar de las abejas","Los plaguicidas son necesarios para el campo"],c:1,e:"El texto relaciona la importancia de los polinizadores para los cultivos con su disminución: esa es la idea que articula todo."},
+ {a:"lec",g:9,q:"Un texto que indica ingredientes y pasos para preparar un sancocho es de tipo:",o:["Narrativo","Argumentativo","Instructivo","Lírico"],c:2,e:"Indica pasos ordenados para lograr algo: es un texto instructivo."},
+ {a:"lec",g:9,q:"Completa: “El equipo entrenó todo el mes; ______, perdió la final.”",o:["sin embargo","por eso","además","porque"],c:0,e:"Se oponen dos ideas (entrenó / perdió): se necesita un conector de contraste."},
+ {a:"lec",g:9,q:"En la frase “El rector ratificó la fecha del simulacro”, la palabra ratificó significa:",o:["cambió","canceló","olvidó","confirmó"],c:3,e:"Ratificar es confirmar algo que ya se había dicho o decidido."},
+ {a:"lec",g:10,ctx:"Cuando Marta llegó a la estación, el andén estaba vacío y el reloj marcaba las 7:05. Su tren salía a las 7:00 en punto.",q:"Del texto se puede inferir que:",o:["Marta perdió el tren","El tren se retrasó","Marta llegó temprano","La estación estaba cerrada"],c:0,e:"El tren salía a las 7:00, ella llegó a las 7:05 y el andén estaba vacío: lo más razonable es que el tren ya había partido."},
+ {a:"lec",g:10,q:"Completa: “Se suspendieron las clases ______ se inundó el colegio.”",o:["aunque","porque","sin embargo","en cambio"],c:1,e:"La inundación es la causa de la suspensión: el conector adecuado es causal."},
+ {a:"lec",g:10,q:"¿Cuál de estos enunciados es una opinión y no un hecho?",o:["El río Magdalena desemboca en el mar Caribe","Colombia tiene 32 departamentos","La champeta es la música más divertida del mundo","El Saber 11 evalúa cinco pruebas"],c:2,e:"“Más divertida” es un juicio de valor que no se puede verificar; los demás son datos comprobables."},
+ {a:"lec",g:10,q:"En un texto expositivo, la expresión “por ejemplo” sirve para:",o:["contradecir la idea anterior","concluir el texto","presentar una causa","ilustrar la idea anterior con un caso"],c:3,e:"Es un conector de ejemplificación: concreta una idea general con un caso."},
+ {a:"lec",g:11,ctx:"Algunos estudiantes afirman que el uniforme limita la expresión personal. Sin embargo, el uniforme reduce las diferencias económicas visibles y la presión por la moda. Por eso, los colegios deberían mantenerlo.",q:"¿Cuál es la tesis del autor?",o:["El uniforme limita la expresión personal","Los colegios deberían mantener el uniforme","La moda genera presión entre jóvenes","Las diferencias económicas son visibles"],c:1,e:"La tesis es la postura que se defiende, introducida aquí por “por eso”. Lo demás son argumentos o la postura contraria."},
+ {a:"lec",g:11,ctx:"Algunos estudiantes afirman que el uniforme limita la expresión personal. Sin embargo, el uniforme reduce las diferencias económicas visibles y la presión por la moda. Por eso, los colegios deberían mantenerlo.",q:"¿Cuál de estos datos debilitaría el argumento del autor?",o:["Los uniformes son cómodos","Muchos padres apoyan el uniforme","En colegios con uniforme las diferencias económicas se siguen notando en celulares y zapatos","El uniforme existe desde hace décadas"],c:2,e:"El autor sostiene que el uniforme reduce las diferencias visibles; un dato que muestra que siguen visibles ataca directamente ese argumento."},
+ {a:"lec",g:11,ctx:"Puntaje global promedio Saber 11 (2024): Magdalena 231 · Promedio nacional 256,1",q:"¿Qué conclusión se apoya únicamente en la información?",o:["Los colegios del Magdalena enseñan mal","En 2024 el promedio del Magdalena estuvo por debajo del nacional","El Magdalena mejorará en 2025","Los estudiantes del Magdalena estudian menos"],c:1,e:"La tabla solo compara dos promedios. Afirmar causas o predicciones va más allá de los datos."},
+ {a:"lec",g:11,q:"Un aviso dice: “¡Últimos cupos! Inscríbete hoy y asegura tu futuro”. La intención principal es:",o:["informar con datos neutrales","narrar una historia","describir un lugar","persuadir al lector para que actúe"],c:3,e:"Usa urgencia y promesas para que el lector se inscriba: es un texto persuasivo."},
+ // Sociales
+ {a:"soc",g:9,q:"¿En qué año se promulgó la Constitución Política vigente en Colombia?",o:["1886","1991","1810","2016"],c:1,e:"La Constitución de 1991 reemplazó a la de 1886 y está vigente."},
+ {a:"soc",g:9,q:"Una persona ve vulnerado su derecho fundamental a la salud y necesita una respuesta rápida de un juez. ¿Qué mecanismo usa?",o:["Acción de tutela","Referendo","Cabildo abierto","Revocatoria del mandato"],c:0,e:"La tutela protege derechos fundamentales y el juez debe decidir en un plazo máximo de 10 días."},
+ {a:"soc",g:9,q:"El departamento del Magdalena pertenece a la región natural:",o:["Andina","Pacífica","Caribe","Orinoquía"],c:2,e:"El Magdalena está en el norte del país, en la región Caribe."},
+ {a:"soc",g:9,q:"¿Cuál de estos es un derecho fundamental en la Constitución de 1991?",o:["Derecho a la recreación","Derecho a un ambiente sano","Derecho a la vivienda digna","Derecho a la vida"],c:3,e:"La vida (art. 11) está en el capítulo de derechos fundamentales; los demás son sociales o colectivos."},
+ {a:"soc",g:10,q:"¿Cuáles son las ramas del poder público en Colombia?",o:["Legislativa, ejecutiva y judicial","Nacional, departamental y municipal","Militar, civil y religiosa","Electoral, fiscal y policial"],c:0,e:"La Constitución organiza el poder en tres ramas: legislativa, ejecutiva y judicial."},
+ {a:"soc",g:10,q:"Si la demanda de un producto aumenta y la oferta se mantiene igual, el precio tiende a:",o:["bajar","desaparecer","subir","mantenerse siempre igual"],c:2,e:"Más personas quieren el mismo número de unidades: el precio tiende a subir."},
+ {a:"soc",g:10,q:"El alcalde quiere que los habitantes decidan con su voto si se construye un relleno sanitario. ¿Qué mecanismo usa?",o:["Acción de tutela","Consulta popular","Derecho de petición","Habeas corpus"],c:1,e:"La consulta popular somete a votación una pregunta de interés general del municipio, el departamento o la nación."},
+ {a:"soc",g:10,q:"¿Qué entidad vigila que los recursos públicos se usen correctamente?",o:["Registraduría","Fiscalía","Defensoría del Pueblo","Contraloría General de la República"],c:3,e:"La Contraloría ejerce el control fiscal sobre el manejo de los recursos públicos."},
+ {a:"soc",g:11,q:"El Acuerdo Final de Paz de 2016 fue firmado entre el Gobierno colombiano y:",o:["las FARC-EP","el ELN","las AUC","el M-19"],c:0,e:"Fue firmado en 2016 por el Gobierno nacional y las FARC-EP. El M-19 firmó la paz en 1990."},
+ {a:"soc",g:11,q:"Una empresa propone explotar arena en el río del municipio, lo que daría empleo pero podría afectar la pesca. ¿Qué actores tienen intereses en tensión?",o:["El Congreso y las cortes","La empresa y los pescadores que dependen del río","Los estudiantes y los profesores","El ICFES y el Ministerio de Educación"],c:1,e:"La empresa busca explotar el recurso y los pescadores dependen de que el río se conserve: sus intereses chocan directamente."},
+ {a:"soc",g:11,q:"Según la Ley General de Educación, el personero estudiantil se encarga de:",o:["nombrar a los profesores","administrar el presupuesto del colegio","promover los derechos y deberes de los estudiantes","calificar las evaluaciones"],c:2,e:"El personero lo eligen los estudiantes y promueve el ejercicio de sus derechos y deberes."},
+ {a:"soc",g:11,q:"Analizar un conflicto desde la mirada de distintos actores sociales se conoce como:",o:["Monopolio","Centralismo","Etnocentrismo","Multiperspectividad"],c:3,e:"Las pruebas de Sociales evalúan esta competencia: comprender un problema desde varias perspectivas."},
+];
+
+/* ---------------- GAMIFICACIÓN ---------------- */
+const NIVELES = [[0,"Aprendiz"],[100,"Explorador"],[250,"Retador"],[450,"Experto"],[700,"Maestro"],[1000,"Leyenda"]];
+function nivelDe(p){let i=0;NIVELES.forEach((n,k)=>{if(p>=n[0])i=k});const cur=NIVELES[i],nx=NIVELES[i+1];return{n:i+1,nombre:cur[1],min:cur[0],max:nx?nx[0]:null}}
+const INSIGNIAS = [
+ {id:"primer",n:"Primer reto",d:"Completa tu primer reto",c:"#1E6FD9",ic:'<path d="M5 3v18M5 4h11l-2 4 2 4H5"/>'},
+ {id:"perfecto",n:"Perfecto",d:"5 de 5 en un reto",c:"#F2B400",ic:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'},
+ {id:"simulacro",n:"Simulacro",d:"Termina un simulacro ICFES",c:"#13235B",ic:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>'},
+ {id:"constante",n:"Constante",d:"Completa 5 retos",c:"#E0352B",ic:'<path d="M12 2c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3 0-3 0-5 0-7z"/>'},
+ {id:"explorador",n:"Explorador",d:"Estudia 5 temas",c:"#3E9A22",ic:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'},
+ {id:"mat",n:"Matemático",d:"10 aciertos en Matemáticas",c:"#1E6FD9",ic:'<path d="M5 12h14M12 5v14"/>'},
+ {id:"fis",n:"Físico",d:"10 aciertos en Física",c:"#7A4FD9",ic:'<circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/>'},
+ {id:"lec",n:"Lector crítico",d:"10 aciertos en Lectura",c:"#E0352B",ic:'<path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/>'},
+ {id:"soc",n:"Ciudadano",d:"10 aciertos en Sociales",c:"#3E9A22",ic:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/>'},
+];
+
+/* ---------------- ENLACES CURADOS (web y redes) ---------------- */
+const ENLACES = [
+ {t:"Cuadernillo de preguntas Matemáticas Saber 11 · 2026",u:"https://www.icfes.gov.co/wp-content/uploads/2026/04/09-Marzo_Cuadernillo-de-Preguntas-Matematicas-Saber-11-2026.pdf",f:"ICFES",a:"mat",k:"doc"},
+ {t:"Cuadernillo de preguntas Lectura crítica Saber 11 · 2026",u:"https://www.icfes.gov.co/wp-content/uploads/2026/03/16-feb-cuadernillo-de-preguntas-lectura-critica-saber-11-2026.pdf",f:"ICFES",a:"lec",k:"doc"},
+ {t:"Generalidades del examen Saber 11 (infografía)",u:"https://www.icfes.gov.co/wp-content/uploads/2025/09/15-septiembre-infografia-generalidades-examen-saber-11.pdf",f:"ICFES",a:"",k:"doc"},
+ {t:"Portal ICFES: guías, cuadernillos y resultados",u:"https://www.icfes.gov.co",f:"ICFES",a:"",k:"web"},
+ {t:"Colombia Aprende",u:"https://www.colombiaaprende.edu.co/",f:"Ministerio de Educación",a:"",k:"web"},
+ {t:"Khan Academy en español",u:"https://es.khanacademy.org/",f:"Khan Academy",a:"mat",k:"web"},
+ {t:"Simulaciones interactivas PhET",u:"https://phet.colorado.edu/es/",f:"Universidad de Colorado",a:"fis",k:"web"},
+ {t:"GeoGebra: calculadora gráfica",u:"https://www.geogebra.org/calculator",f:"GeoGebra",a:"mat",k:"web"},
+ {t:"Enciclopedia Banrepcultural",u:"https://enciclopedia.banrepcultural.org/",f:"Banco de la República",a:"soc",k:"web"},
+ {t:"Julioprofe",u:"https://www.youtube.com/@julioprofe",f:"YouTube",a:"mat",k:"yt"},
+ {t:"Profe Alex",u:"https://www.youtube.com/@profealex",f:"YouTube",a:"mat",k:"yt"},
+ {t:"Math2me",u:"https://www.youtube.com/@math2me",f:"YouTube",a:"mat",k:"yt"},
+ {t:"Unicoos (matemáticas y física)",u:"https://www.youtube.com/@unicoos",f:"YouTube",a:"fis",k:"yt"},
+ {t:"Quantum Fracture",u:"https://www.youtube.com/@QuantumFracture",f:"YouTube",a:"fis",k:"yt"},
+ {t:"Academia Play (historia y sociales)",u:"https://www.youtube.com/@AcademiaPlay",f:"YouTube",a:"soc",k:"yt"},
+ {t:"Khan Academy Español",u:"https://www.youtube.com/@KhanAcademyEspanol",f:"YouTube",a:"",k:"yt"},
+ {t:"#icfes en TikTok",u:"https://www.tiktok.com/search?q=icfes%20saber%2011",f:"TikTok",a:"",k:"tt"},
+ {t:"#saber11 en Instagram",u:"https://www.instagram.com/explore/tags/saber11/",f:"Instagram",a:"",k:"ig"},
+ {t:"ICFES en Facebook",u:"https://www.facebook.com/search/top?q=icfes",f:"Facebook",a:"",k:"fb"},
+];
+const LIC = {
+ doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+ web:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+ yt:'<rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/>',
+ tt:'<path d="M14 3v11a3.5 3.5 0 1 1-3.5-3.5M14 3c.5 2.5 2.5 4 5 4"/>',
+ ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5"/>',
+ fb:'<path d="M15 3h-2a4 4 0 0 0-4 4v3H7v4h2v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2z"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>'
+};
+
+/* ---------------- ESTADO Y DATOS ---------------- */
+const S = { db:null, sample:null, assets:null, user:null, origen:"local", view:"inicio", aprender:{g:null,a:"mat",tema:null}, quiz:null, sim:null, bib:{tipo:"todo"}, recursos:[], recursosOk:false };
+const cap = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
+/* Firebase (opcional): se activa al llenar js/config.js */
+const FB_VER="10.12.2";
+function cargarScript(src){return new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+let fbStorage=null;
+async function fbInit(){
+  try{
+    for(const m of ["app","auth","firestore","storage"]) await cargarScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${m}-compat.js`);
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    await firebase.auth().signInAnonymously();
+    try{ fbStorage=firebase.storage(); }catch(e){ fbStorage=null; }
+    return firebase.firestore();
+  }catch(e){ console.warn("Firebase no disponible, se usa modo local", e); return null; }
+}
+const fbAssets={ async upload(file){ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8); const ref=fbStorage.ref("biblioteca/"+id+"-"+file.name.replace(/[^\w.-]/g,"_")); await ref.put(file,{contentType:file.type}); return {id,url:await ref.getDownloadURL()}; } };
+const USA_FB = !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey);
+const dbReady = (USA_FB ? fbInit() : cap("db")).then(d => { S.db = d; if (d) suscribirRecursos(); if (S.view==="biblioteca") render(); return d; });
+cap("sample").then(s => { S.sample = s; if (S.view==="aprender"||S.view==="inicio"||S.view==="tutor") render(); });
+(USA_FB ? dbReady.then(d => d && fbStorage ? fbAssets : null) : cap("assets")).then(a => { S.assets = a; if (S.view==="biblioteca") render(); });
+
+const LS = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const normUser = u => String(u||"").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9_-]/g,"");
+async function sha256(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function salt(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,"0")).join("")}
+
+async function leerUsuario(id){
+  const db = await dbReady;
+  if (db){ try{ const s = await db.doc("usuarios/"+id).get(); if (s.exists) return {u:structuredClone(s.data()),origen:"nube"}; }catch(e){} }
+  const loc = LS.get("eduplay_usuarios",{})[id];
+  return loc ? {u:loc,origen:"local"} : null;
+}
+async function guardarUsuario(u, origen){
+  const db = S.db;
+  if (db && origen !== "local"){
+    try{ await db.doc("usuarios/"+u.id).set(u); return "nube"; }catch(e){ console.warn("db", e && e.code); if (origen==="nube") throw e; }
+  }
+  const all = LS.get("eduplay_usuarios",{}); all[u.id]=u;
+  if (!LS.set("eduplay_usuarios",all)) throw new Error("storage");
+  return "local";
+}
+let guardando = Promise.resolve();
+function persistir(){ const u = structuredClone(S.user); guardando = guardando.then(()=>guardarUsuario(u,S.origen)).catch(e=>toast("No se pudo guardar el progreso. Revisa tu conexión.")); return guardando; }
+
+/* ---------------- LOGIN / REGISTRO ---------------- */
+function tab(which){
+  const login = which==="login";
+  $("#tab-login").setAttribute("aria-selected",login); $("#tab-reg").setAttribute("aria-selected",!login);
+  $("#f-login").hidden=!login; $("#f-reg").hidden=login;
+}
+$("#tab-login").onclick=()=>tab("login"); $("#tab-reg").onclick=()=>tab("reg");
+$("#go-reg").onclick=e=>{e.preventDefault();tab("reg")};
+function showMsg(el,txt,kind="err"){el.textContent=txt;el.className="msg "+kind;el.hidden=false}
+
+$("#f-reg").addEventListener("submit", async e => {
+  e.preventDefault(); const m=$("#r-msg"); m.hidden=true;
+  const nombre=$("#r-name").value.trim(), id=normUser($("#r-user").value), p=$("#r-pass").value, p2=$("#r-pass2").value;
+  if (nombre.length<3) return showMsg(m,"Escribe tu nombre completo.");
+  if (id.length<3||id.length>20) return showMsg(m,"El usuario debe tener entre 3 y 20 letras o números, sin espacios.");
+  if (p.length<6) return showMsg(m,"La contraseña debe tener al menos 6 caracteres.");
+  if (p!==p2) return showMsg(m,"Las contraseñas no coinciden.");
+  if (!$("#r-ok").checked) return showMsg(m,"Debes aceptar el tratamiento de datos para crear la cuenta.");
+  const b=$("#r-btn"); b.disabled=true; b.textContent="Creando cuenta…";
+  try{
+    if (await leerUsuario(id)) { showMsg(m,"Ese usuario ya existe. Elige otro o inicia sesión."); return; }
+    const s=salt();
+    const u={id,usuario:id,nombre,grado:+$("#r-grado").value,institucion:$("#r-inst").value.trim(),salt:s,hash:await sha256(s+":"+p),
+      creado:new Date().toISOString(),puntos:0,insignias:[],retos:0,temasVistos:[],progreso:{mat:{ok:0,n:0},fis:{ok:0,n:0},lec:{ok:0,n:0},soc:{ok:0,n:0}},simulacros:[]};
+    const origen = await guardarUsuario(u,"auto");
+    iniciarSesion(u,origen);
+    toast(origen==="nube" ? "Cuenta creada y guardada en la base de datos" : "Cuenta creada y guardada en este dispositivo");
+  }catch(err){ showMsg(m,"No se pudo crear la cuenta. Revisa tu conexión e inténtalo otra vez."); }
+  finally{ b.disabled=false; b.textContent="Crear mi cuenta"; }
+});
+
+$("#f-login").addEventListener("submit", async e => {
+  e.preventDefault(); const m=$("#l-msg"); m.hidden=true;
+  const id=normUser($("#l-user").value), p=$("#l-pass").value;
+  if (!id||!p) return showMsg(m,"Escribe tu usuario y contraseña.");
+  const b=$("#l-btn"); b.disabled=true; b.textContent="Verificando…";
+  try{
+    const r = await leerUsuario(id);
+    if (!r || (await sha256(r.u.salt+":"+p))!==r.u.hash) return showMsg(m,"Usuario o contraseña incorrectos.");
+    iniciarSesion(r.u,r.origen);
+  } finally { b.disabled=false; b.textContent="Entrar"; }
+});
+
+function iniciarSesion(u,origen){
+  S.user=u; S.origen=origen; LS.set("eduplay_sesion",{id:u.id});
+  S.aprender.g=u.grado; $("#auth").hidden=true; $("#app").hidden=false; stopFx(); go("inicio");
+}
+function cerrarSesion(){ LS.del("eduplay_sesion"); S.user=null; S.quiz=null; clearInterval(S.sim?.timer); S.sim=null; $("#app").hidden=true; $("#auth").hidden=false; $("#f-login").reset(); tab("login"); startFx(); }
+(async()=>{ const ses=LS.get("eduplay_sesion",null); if(!ses) return; const r=await leerUsuario(ses.id); if(r && $("#auth").hidden===false) iniciarSesion(r.u,r.origen); })();
+
+/* ---------------- NAVEGACIÓN ---------------- */
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
+function go(v){ S.view=v; document.querySelectorAll(".nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===v?"page":"false")); render(); window.scrollTo(0,0); }
+function hdr(){ const p=S.user?.puntos||0; $("#hdr-pts").textContent=p; $("#hdr-lv").textContent=nivelDe(p).n; }
+function render(){ if(!S.user) return; hdr(); const V=$("#view"); V.innerHTML=({inicio:vInicio,aprender:vAprender,retos:vRetos,biblioteca:vBiblioteca,perfil:vPerfil,quiz:vQuiz,sim:vSim,tutor:vTutor}[S.view]||vInicio)(); bind[S.view]?.(); }
+let toastT; function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,3200)}
+
+/* ---------------- VISTA: INICIO ---------------- */
+function vInicio(){
+  const u=S.user, lv=nivelDe(u.puntos), pct=lv.max?Math.round((u.puntos-lv.min)/(lv.max-lv.min)*100):100;
+  const nombre=u.nombre.split(" ")[0];
+  return `
+  <section class="hero pop">
+    <p class="label" style="color:#BFD0FF">Hola, ${esc(nombre)} · Grado ${u.grado}°</p>
+    <div class="lv"><span class="lvname">Nivel ${lv.n} · ${lv.nombre}</span><span class="mono" style="opacity:.85">${u.puntos} pts</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p class="small" style="opacity:.85">${lv.max?`Te faltan <b class="mono">${lv.max-u.puntos}</b> puntos para ${nivelDe(lv.max).nombre}.`:"Llegaste al nivel máximo."}</p>
+  </section>
+  <section class="grid2">
+    <button class="tile" data-act="reto-rapido"><span class="ic" style="background:var(--blue)">${svg('<rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v5M4.5 12.5h5"/>',21)}</span><strong>Reto rápido</strong><span class="small muted">5 preguntas de tu grado</span></button>
+    <button class="tile" data-act="sim"><span class="ic" style="background:var(--navy)">${svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',21)}</span><strong>Simulacro ICFES</strong><span class="small muted">20 preguntas · 30 min</span></button>
+    <button class="tile" data-act="tutor"><span class="ic" style="background:var(--green)">${svg('<path d="M12 3a7 7 0 0 1 4 12.7V18H8v-2.3A7 7 0 0 1 12 3zM9 21h6"/>',21)}</span><strong>Tutor IA</strong><span class="small muted">Pregunta lo que no entiendas</span></button>
+    <button class="tile" data-act="aprender"><span class="ic" style="background:var(--red)">${svg(AREAS.lec.ic,21)}</span><strong>Seguir aprendiendo</strong><span class="small muted">${u.temasVistos.length} temas estudiados</span></button>
+  </section>
+  <section class="card fact">
+    <span class="big">−25</span>
+    <p class="small"><b>Puntos de diferencia.</b> En 2024 el puntaje global del Magdalena en Saber 11 fue 231, frente a 256,1 del promedio nacional. Cada reto que completas ayuda a cerrar esa brecha.</p>
+  </section>
+  <section class="card stack"><h3>Tabla de clasificación</h3><div id="rank-home" class="rank"><p class="small muted">Cargando…</p></div></section>`;
+}
+
+/* ---------------- VISTA: APRENDER ---------------- */
+function vAprender(){
+  const ap=S.aprender, g=ap.g||S.user.grado;
+  if (ap.tema){ return vTema(ap.tema); }
+  const temas=TEMAS.filter(t=>t.a===ap.a&&t.g===g);
+  return `
+  <h1>Aprender</h1>
+  <div class="stack">
+    <div class="chips" role="group" aria-label="Grado">${[9,10,11].map(x=>`<button class="chip" data-g="${x}" aria-pressed="${x===g}">${x}°</button>`).join("")}</div>
+    <div class="chips" role="group" aria-label="Área">${Object.entries(AREAS).map(([k,v])=>`<button class="chip" data-a="${k}" aria-pressed="${k===ap.a}">${v.n}</button>`).join("")}</div>
+  </div>
+  <div class="stack area-${ap.a}">
+    ${temas.map(t=>`<button class="topic" data-tema="${esc(t.t)}"><span class="dot"></span><span class="tx"><b>${esc(t.t)}</b><br><span class="small muted">${esc(t.r.slice(0,78))}…</span></span>${S.user.temasVistos.includes(t.t)?'<span class="seen">Visto</span>':''}</button>`).join("") || '<p class="empty">Pronto habrá temas para este grado.</p>'}
+  </div>`;
+}
+function vTema(nombre){
+  const t=TEMAS.find(x=>x.t===nombre), q=encodeURIComponent(t.t+" "+AREAS[t.a].n+" explicación");
+  return `
+  <button class="btn ghost" data-act="volver-temas" style="justify-self:start">← Temas</button>
+  <article class="card stack sheet area-${t.a}">
+    <span class="label">${AREAS[t.a].n} · Grado ${t.g}°</span>
+    <h2>${esc(t.t)}</h2>
+    <p>${esc(t.r)}</p>
+    <div class="example"><span class="label">Ejemplo</span><br>${esc(t.ej)}</div>
+    <div class="stack"><span class="label">Videos y recursos en la web y redes</span>
+      <div class="links">
+        <a class="link" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${q}">${svg(LIC.yt,16)} YouTube</a>
+        <a class="link" target="_blank" rel="noopener" href="https://www.tiktok.com/search?q=${encodeURIComponent(t.t+" icfes")}">${svg(LIC.tt,16)} TikTok</a>
+        <a class="link" target="_blank" rel="noopener" href="https://es.khanacademy.org/search?page_search_query=${encodeURIComponent(t.t)}">${svg(LIC.web,16)} Khan Academy</a>
+        <a class="link" target="_blank" rel="noopener" href="https://es.wikipedia.org/w/index.php?search=${encodeURIComponent(t.t)}">${svg(LIC.doc,16)} Wikipedia</a>
+      </div></div>
+  </article>
+  <div class="grid2">
+    <button class="btn" data-act="reto-area">Hacer reto de ${AREAS[t.a].n.split(" ")[0]}</button>
+    <button class="btn green" data-act="tutor-tema">Preguntar al tutor IA</button>
+  </div>`;
+}
+
+/* ---------------- VISTA: TUTOR IA ---------------- */
+function vTutor(){
+  const pre=S.tutorPre||"";
+  return `
+  <button class="btn ghost" data-act="volver-ini" style="justify-self:start">← Volver</button>
+  <h1>Tutor IA</h1>
+  <p class="muted">Explica temas paso a paso, resuelve dudas y crea retos nuevos. Responde según tu grado.</p>
+  ${S.sample?`
+  <form id="f-tutor" class="card inline-form">
+    <div class="field"><label for="t-area">Área</label><select id="t-area">${Object.entries(AREAS).map(([k,v])=>`<option value="${k}" ${k===S.aprender.a?"selected":""}>${v.n}</option>`).join("")}</select></div>
+    <div class="field"><label for="t-q">Tu pregunta</label><textarea id="t-q" rows="3" placeholder="Ej: no entiendo cuándo usar seno o coseno">${esc(pre)}</textarea></div>
+    <div class="grid2"><button class="btn green" type="submit" id="t-send">Preguntar</button><button class="btn" type="button" id="t-gen">Crear reto con IA</button></div>
+  </form>
+  <div class="card stack"><span class="label">Respuesta</span><div id="t-out" class="tutor-out muted">Aquí aparecerá la explicación.</div></div>`
+  :`<p class="empty">El tutor IA necesita conexión a un servicio de inteligencia artificial. Está activo en la versión publicada en Claude; para GitHub, consulta el README.</p>`}`;
+}
+
+/* ---------------- VISTA: RETOS ---------------- */
+function vRetos(){
+  const g=S.user.grado;
+  return `
+  <h1>Retos</h1>
+  <p class="muted">Elige un área y un nivel. Cada respuesta correcta suma 10 puntos y ves la explicación al instante.</p>
+  <div class="chips" role="group" aria-label="Nivel">${[[9,"Básico 9°"],[10,"Medio 10°"],[11,"Avanzado 11°"]].map(([x,l])=>`<button class="chip" data-nivel="${x}" aria-pressed="${x===(S.nivelReto||g)}">${l}</button>`).join("")}</div>
+  <div class="grid2">${Object.entries(AREAS).map(([k,v])=>{const p=S.user.progreso[k];return `<button class="tile" data-reto="${k}"><span class="ic" style="background:${v.c}">${svg(v.ic,21)}</span><strong>${v.n}</strong><span class="small muted mono">${p.ok}/${p.n} aciertos</span></button>`}).join("")}</div>
+  <button class="btn block yellow" data-act="sim">Simulacro tipo ICFES · 20 preguntas · 30 min</button>
+  <button class="btn block green" data-act="tutor">Crear reto nuevo con el tutor IA</button>`;
+}
+function mezclar(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function prepQ(q){const idx=mezclar(q.o.map((_,i)=>i));return {...q,o:idx.map(i=>q.o[i]),c:idx.indexOf(q.c)}}
+function iniciarReto(area,nivel,preguntas){
+  let pool;
+  if (preguntas) pool=preguntas;
+  else { const exactas=BANCO.filter(q=>q.a===area&&q.g===nivel), otras=BANCO.filter(q=>q.a===area&&q.g!==nivel&&q.g<=nivel); pool=[...mezclar(exactas),...mezclar(otras)].slice(0,5); if(pool.length<5) pool=[...pool,...mezclar(BANCO.filter(q=>q.a===area&&!pool.includes(q)))].slice(0,5); }
+  S.quiz={area,nivel,qs:pool.map(prepQ),i:0,sel:null,ok:0,ia:!!preguntas}; go("quiz");
+}
+function vQuiz(){
+  const z=S.quiz; if(!z) return vRetos();
+  if (z.i>=z.qs.length) return vQuizFin();
+  const q=z.qs[z.i], answered=z.sel!==null;
+  return `
+  <div class="qhead"><span class="label">${AREAS[q.a]?.n||"Reto"}${z.ia?" · creado con IA":""}</span><span class="mono small">${z.i+1} / ${z.qs.length}</span></div>
+  <div class="bar light"><i style="width:${(z.i/z.qs.length)*100}%"></i></div>
+  <article class="card stack pop">
+    ${q.ctx?`<div class="ctx">${esc(q.ctx)}</div>`:""}
+    <h3>${esc(q.q)}</h3>
+    <div class="opts">${q.o.map((o,i)=>{let cl="opt";if(answered){if(i===q.c)cl+=" right";else if(i===z.sel)cl+=" wrong"}return `<button class="${cl}" data-op="${i}" ${answered?"disabled":""}><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`}).join("")}</div>
+    ${answered?`<div class="fb ${z.sel===q.c?"ok":"bad"}"><b>${z.sel===q.c?"¡Correcto! +10 pts":"Respuesta incorrecta"}</b><p>${esc(q.e)}</p></div><button class="btn block" data-act="sig">${z.i+1<z.qs.length?"Siguiente":"Ver resultado"}</button>`:""}
+  </article>`;
+}
+function vQuizFin(){
+  const z=S.quiz; return `
+  <article class="card stack pop" style="text-align:center">
+    <span class="label">Reto terminado</span>
+    <h1 class="mono">${z.ok} / ${z.qs.length}</h1>
+    <p>Ganaste <b class="mono">${z.ok*10}</b> puntos${z.nuevas?.length?`, y desbloqueaste: <b>${z.nuevas.map(id=>INSIGNIAS.find(b=>b.id===id).n).join(", ")}</b>`:""}.</p>
+    <div class="grid2"><button class="btn" data-act="otra">Otro reto</button><button class="btn ghost" data-act="perfil">Ver mi progreso</button></div>
+  </article>`;
+}
+function cerrarReto(){
+  const z=S.quiz,u=S.user; u.retos=(u.retos||0)+1; 
+  z.nuevas=revisarInsignias({perfecto:z.ok===z.qs.length&&z.qs.length>=5}); persistir();
+}
+function revisarInsignias(ev={}){
+  const u=S.user, tiene=new Set(u.insignias), nuevas=[];
+  const add=id=>{if(!tiene.has(id)){tiene.add(id);nuevas.push(id)}};
+  if(u.retos>=1)add("primer"); if(ev.perfecto)add("perfecto"); if(u.simulacros.length)add("simulacro");
+  if(u.retos>=5)add("constante"); if(u.temasVistos.length>=5)add("explorador");
+  ["mat","fis","lec","soc"].forEach(a=>{if(u.progreso[a].ok>=10)add(a)});
+  u.insignias=[...tiene]; if(nuevas.length) toast("Nueva insignia: "+nuevas.map(id=>INSIGNIAS.find(b=>b.id===id).n).join(", "));
+  return nuevas;
+}
+
+/* ---------------- VISTA: SIMULACRO ---------------- */
+function iniciarSim(){
+  const qs=["lec","mat","soc","fis"].flatMap(a=>mezclar(BANCO.filter(q=>q.a===a)).slice(0,5)).map(prepQ);
+  S.sim={qs,resp:Array(qs.length).fill(null),i:0,fin:Date.now()+30*60*1000,terminado:false};
+  S.sim.timer=setInterval(tick,1000); go("sim");
+}
+function tick(){ const s=S.sim; if(!s||s.terminado) return; const left=s.fin-Date.now(); const el=$("#sim-t"); if(el){el.textContent=fmt(left);el.classList.toggle("low",left<5*60*1000)} if(left<=0) terminarSim(); }
+const fmt=ms=>{ms=Math.max(0,ms);const m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000);return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")};
+function vSim(){
+  const s=S.sim; if(!s) return vRetos(); if(s.terminado) return vSimFin();
+  const q=s.qs[s.i];
+  return `
+  <div class="qhead"><h2>Simulacro ICFES</h2><span id="sim-t" class="timer">${fmt(s.fin-Date.now())}</span></div>
+  <div class="qnav" aria-label="Preguntas">${s.qs.map((_,i)=>`<button data-qi="${i}" class="${i===s.i?"cur":s.resp[i]!==null?"done":""}">${i+1}</button>`).join("")}</div>
+  <article class="card stack">
+    <span class="label">${AREAS[q.a].n} · Pregunta ${s.i+1}</span>
+    ${q.ctx?`<div class="ctx">${esc(q.ctx)}</div>`:""}
+    <h3>${esc(q.q)}</h3>
+    <div class="opts">${q.o.map((o,i)=>`<button class="opt ${s.resp[s.i]===i?"sel":""}" data-sop="${i}"><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+  </article>
+  <div class="grid2"><button class="btn ghost" data-act="sprev" ${s.i===0?"disabled":""}>Anterior</button>${s.i<s.qs.length-1?'<button class="btn" data-act="snext">Siguiente</button>':'<button class="btn red" data-act="sfin">Terminar</button>'}</div>
+  <p class="small muted">Respondidas: <span class="mono">${s.resp.filter(r=>r!==null).length}/${s.qs.length}</span>. La retroalimentación aparece al terminar, como en el examen real.</p>`;
+}
+function terminarSim(){
+  const s=S.sim; if(s.terminado) return; s.terminado=true; clearInterval(s.timer);
+  const u=S.user; let ok=0; const porArea={};
+  s.qs.forEach((q,i)=>{const bien=s.resp[i]===q.c; if(bien) ok++; porArea[q.a]=porArea[q.a]||{ok:0,n:0}; porArea[q.a].n++; if(bien)porArea[q.a].ok++; u.progreso[q.a].n++; if(bien)u.progreso[q.a].ok++;});
+  s.ok=ok; s.porArea=porArea; s.puntaje=Math.round(ok/s.qs.length*500);
+  u.puntos+=ok*10+20; u.simulacros=[...u.simulacros,{fecha:new Date().toISOString(),ok,total:s.qs.length,puntaje:s.puntaje}].slice(-10);
+  s.nuevas=revisarInsignias(); persistir(); if(S.view==="sim") render();
+}
+function vSimFin(){
+  const s=S.sim; return `
+  <article class="card stack pop">
+    <span class="label">Resultado del simulacro</span>
+    <div class="statrow">
+      <div class="stat"><span class="small muted">Aciertos</span><b>${s.ok}/${s.qs.length}</b></div>
+      <div class="stat"><span class="small muted">Puntaje estimado</span><b>${s.puntaje}</b></div>
+      <div class="stat"><span class="small muted">Puntos ganados</span><b>+${s.ok*10+20}</b></div>
+    </div>
+    <p class="small muted">El puntaje estimado escala tus aciertos a 0–500, como el puntaje global del Saber 11. Es una referencia, no un resultado oficial.</p>
+    ${Object.entries(s.porArea).map(([a,v])=>`<div class="arow"><span>${AREAS[a].n.split(" ")[0]}</span><div class="bar light"><i style="width:${v.ok/v.n*100}%"></i></div><span class="mono small">${v.ok}/${v.n}</span></div>`).join("")}
+  </article>
+  <details class="card"><summary>Revisar respuestas y explicaciones</summary>
+    <div class="stack" style="margin-top:12px">${s.qs.map((q,i)=>{const bien=s.resp[i]===q.c;return `<div class="fb ${bien?"ok":"bad"}"><b>${i+1}. ${bien?"Correcta":"Incorrecta"}</b><p>${esc(q.q)}</p><p><b>Respuesta:</b> ${esc(q.o[q.c])}</p><p>${esc(q.e)}</p></div>`}).join("")}</div>
+  </details>
+  <div class="grid2"><button class="btn" data-act="sim">Nuevo simulacro</button><button class="btn ghost" data-act="perfil">Mi progreso</button></div>`;
+}
+
+/* ---------------- VISTA: BIBLIOTECA (fotos, videos, enlaces) ---------------- */
+let unsubRec=null;
+function suscribirRecursos(){
+  if(unsubRec||!S.db) return;
+  unsubRec=S.db.collection("recursos").orderBy("creado","desc").limit(200).onSnapshot(snap=>{
+    S.recursos=snap.docs.map(d=>({id:d.id,...d.data()})); S.recursosOk=true; if(S.view==="biblioteca") pintarRecursos();
+  },err=>{S.recursosOk=true; if(S.view==="biblioteca") pintarRecursos();});
+}
+function vBiblioteca(){
+  const t=S.bib.tipo;
+  return `
+  <h1>Biblioteca</h1>
+  <p class="muted">Fotos, videos y enlaces de estudio guardados en la base de datos de EduPlay, más recursos seleccionados de la web y redes sociales.</p>
+  <div class="chips" role="group" aria-label="Tipo">${[["todo","Todo"],["foto","Fotos"],["video","Videos"],["enlace","Enlaces"]].map(([k,l])=>`<button class="chip" data-tipo="${k}" aria-pressed="${k===t}">${l}</button>`).join("")}</div>
+  <section id="rec-list" class="stack"></section>
+  <details class="card" id="add-box"><summary>Agregar a la biblioteca</summary>
+    <form id="f-rec" class="inline-form" style="margin-top:12px">
+      <div class="row2">
+        <div class="field"><label for="rc-tipo">Tipo</label><select id="rc-tipo"><option value="enlace">Enlace</option><option value="foto" ${S.assets?"":"disabled"}>Foto</option><option value="video" ${S.assets?"":"disabled"}>Video</option></select></div>
+        <div class="field"><label for="rc-area">Área</label><select id="rc-area"><option value="">General</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><label for="rc-tit">Título</label><input id="rc-tit" maxlength="90" placeholder="Ej: Mapa de las regiones de Colombia"></div>
+      <div class="field" id="rc-url-f"><label for="rc-url">Dirección (URL)</label><input id="rc-url" type="url" placeholder="https://…"></div>
+      <div class="field" id="rc-file-f" hidden><label for="rc-file">Archivo (máx. 20 MB)</label><input id="rc-file" type="file" accept="image/*,video/*"></div>
+      <div class="field"><label for="rc-desc">Descripción</label><textarea id="rc-desc" rows="2" maxlength="240"></textarea></div>
+      <div id="rc-msg" class="msg" hidden></div>
+      <button class="btn green" type="submit" id="rc-btn">Guardar en la biblioteca</button>
+      ${S.assets?"":'<p class="small muted">Subir fotos y videos requiere Firebase Storage activado.</p>'}
+    </form>
+  </details>
+  <section class="stack"><h2>Recomendados de la web y redes</h2>
+    <div class="stack">${ENLACES.filter(l=>t==="todo"||t==="enlace").map(l=>`<a class="lnk" href="${l.u}" target="_blank" rel="noopener"><span class="lic">${svg(LIC[l.k],20)}</span><span class="tx"><strong>${esc(l.t)}</strong><span class="small muted">${esc(l.f)}${l.a?" · "+AREAS[l.a].n:""}</span></span></a>`).join("")}</div>
+    ${t==="foto"||t==="video"?'<p class="small muted">Los enlaces recomendados aparecen en las pestañas Todo y Enlaces.</p>':""}
+  </section>`;
+}
+function pintarRecursos(){
+  const box=$("#rec-list"); if(!box) return; const t=S.bib.tipo;
+  if(!S.db){ box.innerHTML='<p class="empty">La base de datos de fotos y videos se activa al configurar Firebase (ver README).</p>'; return; }
+  if(!S.recursosOk){ box.innerHTML='<p class="empty">Cargando la biblioteca…</p>'; return; }
+  const items=S.recursos.filter(r=>t==="todo"||r.tipo===t);
+  if(!items.length){ box.innerHTML='<p class="empty">Aún no hay elementos aquí. Usa “Agregar a la biblioteca” para subir la primera foto, video o enlace.</p>'; return; }
+  const med=items.filter(r=>r.tipo!=="enlace"), lnk=items.filter(r=>r.tipo==="enlace");
+  box.innerHTML=(med.length?`<div class="media-grid">${med.map(r=>`<figure class="media" style="margin:0">${r.tipo==="foto"?`<img loading="lazy" src="${esc(r.url)}" alt="${esc(r.titulo)}">`:`<video controls preload="metadata" src="${esc(r.url)}"></video>`}<figcaption class="mb"><span class="tag">${r.tipo==="foto"?"Foto":"Video"}${r.area?" · "+esc(AREAS[r.area]?.n.split(" ")[0]||""):""}</span><strong>${esc(r.titulo)}</strong>${r.descripcion?`<span class="small muted">${esc(r.descripcion)}</span>`:""}</figcaption></figure>`).join("")}</div>`:"")
+   +(lnk.length?`<div class="stack">${lnk.map(r=>`<a class="lnk" href="${esc(r.url)}" target="_blank" rel="noopener"><span class="lic">${svg(LIC.link,20)}</span><span class="tx"><strong>${esc(r.titulo)}</strong><span class="small muted">${esc(r.descripcion||r.url)}</span></span></a>`).join("")}</div>`:"");
+}
+
+/* ---------------- VISTA: PERFIL ---------------- */
+function vPerfil(){
+  const u=S.user, lv=nivelDe(u.puntos), ini=u.nombre.split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();
+  return `
+  <section class="card" style="display:flex;gap:14px;align-items:center">
+    <span class="avatar">${esc(ini)}</span>
+    <div style="min-width:0"><h2>${esc(u.nombre)}</h2><p class="small muted">@${esc(u.usuario)} · Grado ${u.grado}° · ${esc(u.institucion||"")}</p><p class="small"><b>Nivel ${lv.n} · ${lv.nombre}</b> · <span class="mono">${u.puntos} pts</span></p></div>
+  </section>
+  <section class="card stack"><h3>Progreso por área</h3>
+    ${Object.entries(AREAS).map(([a,v])=>{const p=u.progreso[a],pc=p.n?Math.round(p.ok/p.n*100):0;return `<div class="arow"><span>${v.n.split(" ")[0]}</span><div class="bar light"><i style="width:${pc}%"></i></div><span class="mono small">${pc}%</span></div>`}).join("")}
+    <p class="small muted"><span class="mono">${u.retos||0}</span> retos · <span class="mono">${u.simulacros.length}</span> simulacros · <span class="mono">${u.temasVistos.length}</span> temas estudiados</p>
+  </section>
+  <section class="stack"><h3>Insignias</h3><div class="badges">${INSIGNIAS.map(b=>`<div class="badge ${u.insignias.includes(b.id)?"":"locked"}" style="--bc:${b.c}"><span class="medal">${svg(b.ic,24)}</span><strong>${b.n}</strong><span>${b.d}</span></div>`).join("")}</div></section>
+  ${u.simulacros.length?`<section class="card stack"><h3>Historial de simulacros</h3>${u.simulacros.slice().reverse().map(s=>`<div class="arow"><span class="small">${new Date(s.fecha).toLocaleDateString("es-CO",{day:"numeric",month:"short"})}</span><div class="bar light"><i style="width:${s.puntaje/5}%"></i></div><span class="mono small">${s.puntaje}</span></div>`).join("")}</section>`:""}
+  <section class="card stack"><h3>Tabla de clasificación</h3><div id="rank-home" class="rank"><p class="small muted">Cargando…</p></div></section>
+  <p class="small muted">Tu cuenta está guardada ${S.origen==="nube"?"en la base de datos de EduPlay":"en este dispositivo"}.</p>
+  <button class="btn red block" data-act="salir">Cerrar sesión</button>`;
+}
+async function pintarRanking(){
+  const box=$("#rank-home"); if(!box) return; let lista=[];
+  const db=await dbReady;
+  if(db){ try{ const s=await db.collection("usuarios").orderBy("puntos","desc").limit(10).get(); lista=s.docs.map(d=>d.data()); }catch(e){} }
+  Object.values(LS.get("eduplay_usuarios",{})).forEach(u=>{if(!lista.some(x=>x.id===u.id))lista.push(u)});
+  if(!lista.some(x=>x.id===S.user.id)) lista.push(S.user);
+  lista=lista.map(x=>x.id===S.user.id?S.user:x).sort((a,b)=>b.puntos-a.puntos).slice(0,10);
+  const corto=n=>{const p=String(n).split(" ");return p[0]+(p[1]?" "+p[1][0]+".":"")};
+  if(!$("#rank-home")) return;
+  $("#rank-home").innerHTML=`<ol>${lista.map((u,i)=>`<li class="${u.id===S.user.id?"me":""}"><span class="pos">${i+1}</span><span>${esc(corto(u.nombre))} <span class="small muted">· ${u.grado}°</span></span><span class="mono">${u.puntos}</span></li>`).join("")}</ol>`;
+}
+
+/* ---------------- EVENTOS POR VISTA ---------------- */
+const bind={
+  inicio(){ acts(); pintarRanking(); },
+  perfil(){ acts(); pintarRanking(); },
+  aprender(){
+    acts();
+    document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{S.aprender.g=+b.dataset.g;render()});
+    document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{S.aprender.a=b.dataset.a;render()});
+    document.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{
+      const t=b.dataset.tema; S.aprender.tema=t;
+      if(!S.user.temasVistos.includes(t)){S.user.temasVistos=[...S.user.temasVistos,t];S.user.puntos+=2;revisarInsignias();persistir();}
+      render(); window.scrollTo(0,0);
+    });
+  },
+  retos(){
+    acts();
+    document.querySelectorAll("[data-nivel]").forEach(b=>b.onclick=()=>{S.nivelReto=+b.dataset.nivel;render()});
+    document.querySelectorAll("[data-reto]").forEach(b=>b.onclick=()=>iniciarReto(b.dataset.reto,S.nivelReto||S.user.grado));
+  },
+  quiz(){
+    acts();
+    document.querySelectorAll("[data-op]").forEach(b=>b.onclick=()=>{
+      const z=S.quiz,q=z.qs[z.i]; if(z.sel!==null) return; z.sel=+b.dataset.op;
+      const bien=z.sel===q.c; if(AREAS[q.a]){S.user.progreso[q.a].n++; if(bien)S.user.progreso[q.a].ok++;}
+      if(bien){z.ok++;S.user.puntos+=10;} render();
+    });
+    const sig=$('[data-act="sig"]'); if(sig) sig.onclick=()=>{const z=S.quiz;z.i++;z.sel=null;if(z.i>=z.qs.length)cerrarReto();render();window.scrollTo(0,0)};
+  },
+  sim(){
+    acts();
+    document.querySelectorAll("[data-sop]").forEach(b=>b.onclick=()=>{S.sim.resp[S.sim.i]=+b.dataset.sop;render()});
+    document.querySelectorAll("[data-qi]").forEach(b=>b.onclick=()=>{S.sim.i=+b.dataset.qi;render()});
+  },
+  tutor(){
+    acts(); const f=$("#f-tutor"); if(!f) return;
+    f.addEventListener("submit",async e=>{e.preventDefault();const q=$("#t-q").value.trim();if(!q)return;const out=$("#t-out");out.classList.remove("muted");out.textContent="Pensando…";const btn=$("#t-send");btn.disabled=true;
+      const area=AREAS[$("#t-area").value].n;
+      const prompt=`Eres el tutor de EduPlay, una app educativa colombiana para estudiantes de grado ${S.user.grado}° que se preparan para la prueba Saber 11 (ICFES). Área: ${area}.
+Responde en español de Colombia, claro y amable, en máximo 180 palabras. Explica paso a paso, con un ejemplo corto y, si aplica, un consejo para responder preguntas tipo ICFES. Usa texto plano sin markdown.
+Pregunta del estudiante: ${q}`;
+      try{ await S.sample(prompt,{onText:({text})=>{out.textContent=text},modelTier:"quick"}); }
+      catch(err){ out.textContent = err?.code==="not_granted" ? "No diste permiso para usar el tutor IA en esta página." : err?.code==="rate_limited" ? "Hay muchas preguntas en este momento. Espera un minuto e inténtalo de nuevo." : "No se pudo obtener respuesta. Inténtalo de nuevo."; }
+      finally{ btn.disabled=false; }
+    });
+    $("#t-gen").onclick=async()=>{const a=$("#t-area").value,out=$("#t-out"),b=$("#t-gen");b.disabled=true;out.classList.remove("muted");out.textContent="Creando 5 preguntas nuevas de "+AREAS[a].n+"…";
+      try{
+        const r=await S.sample.json(`Crea 5 preguntas de selección múltiple con única respuesta, estilo prueba Saber 11 de Colombia, para el área de ${AREAS[a].n}, grado ${S.user.grado}°. ${$("#t-q").value.trim()?"Tema sugerido por el estudiante: "+$("#t-q").value.trim()+".":""}
+Devuelve SOLO JSON con esta forma: {"preguntas":[{"q":"enunciado","o":["opción A","opción B","opción C","opción D"],"c":0,"e":"explicación breve de por qué es correcta"}]} donde c es el índice (0-3) de la opción correcta. Verifica que cada respuesta sea correcta.`,{modelTier:"default"});
+        const ps=(r?.preguntas||[]).filter(p=>p&&p.q&&Array.isArray(p.o)&&p.o.length===4&&p.c>=0&&p.c<4).slice(0,5).map(p=>({a,g:S.user.grado,q:String(p.q),o:p.o.map(String),c:+p.c,e:String(p.e||"")}));
+        if(!ps.length) throw new Error("vacío");
+        iniciarReto(a,S.user.grado,ps);
+      }catch(err){ out.textContent = err?.code==="not_granted" ? "No diste permiso para usar el tutor IA en esta página." : "No se pudo crear el reto. Inténtalo de nuevo."; b.disabled=false; }
+    };
+  },
+  biblioteca(){
+    acts(); pintarRecursos();
+    document.querySelectorAll("[data-tipo]").forEach(b=>b.onclick=()=>{S.bib.tipo=b.dataset.tipo;render()});
+    const tipo=$("#rc-tipo"); tipo.onchange=()=>{const e=tipo.value==="enlace";$("#rc-url-f").hidden=!e;$("#rc-file-f").hidden=e};
+    $("#f-rec").addEventListener("submit",async e=>{
+      e.preventDefault(); const m=$("#rc-msg"); m.hidden=true;
+      const tp=tipo.value, tit=$("#rc-tit").value.trim();
+      if(!S.db) return showMsg(m,"La biblioteca necesita la base de datos. Configura Firebase en js/config.js.");
+      if(tit.length<3) return showMsg(m,"Escribe un título de al menos 3 letras.");
+      const doc={tipo:tp,titulo:tit,area:$("#rc-area").value,descripcion:$("#rc-desc").value.trim(),autor:S.user.nombre.split(" ")[0],creado:new Date().toISOString()};
+      const btn=$("#rc-btn"); btn.disabled=true; btn.textContent="Guardando…";
+      try{
+        if(tp==="enlace"){ const u=$("#rc-url").value.trim(); if(!/^https?:\/\/\S+\.\S+/.test(u)) { showMsg(m,"Escribe una dirección que empiece por https://"); return; } doc.url=u; }
+        else { const f=$("#rc-file").files[0]; if(!f){showMsg(m,"Elige el archivo que quieres subir.");return;} if(f.size>20*1024*1024){showMsg(m,"El archivo pesa más de 20 MB. Comprímelo o elige otro.");return;}
+          if(tp==="foto"&&!f.type.startsWith("image/")){showMsg(m,"Ese archivo no es una imagen.");return;} if(tp==="video"&&!f.type.startsWith("video/")){showMsg(m,"Ese archivo no es un video.");return;}
+          const up=await S.assets.upload(f); doc.url=up.url; doc.assetId=up.id; }
+        await S.db.collection("recursos").add(doc);
+        $("#f-rec").reset(); $("#rc-url-f").hidden=false; $("#rc-file-f").hidden=true; showMsg(m,"Guardado en la biblioteca.","ok");
+      }catch(err){ showMsg(m, err?.code==="permission_denied"||err?.code==="not_granted" ? "No tienes permiso para agregar elementos. Revisa las reglas de Firebase." : "No se pudo guardar. Revisa tu conexión e inténtalo otra vez."); }
+      finally{ btn.disabled=false; btn.textContent="Guardar en la biblioteca"; }
+    });
+  }
+};
+function acts(){
+  document.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.act;
+    if(a==="reto-rapido") iniciarReto(["mat","fis","lec","soc"][Math.floor(Math.random()*4)],S.user.grado);
+    else if(a==="sim"){ if(S.sim&&!S.sim.terminado){go("sim")} else iniciarSim(); }
+    else if(a==="tutor"){ S.tutorPre=""; go("tutor"); }
+    else if(a==="tutor-tema"){ const t=TEMAS.find(x=>x.t===S.aprender.tema); S.aprender.a=t.a; S.tutorPre="Explícame "+t.t+" con un ejemplo tipo ICFES"; go("tutor"); }
+    else if(a==="aprender") go("aprender");
+    else if(a==="volver-temas"){ S.aprender.tema=null; render(); }
+    else if(a==="volver-ini") go("inicio");
+    else if(a==="reto-area"){ const t=TEMAS.find(x=>x.t===S.aprender.tema); iniciarReto(t.a,t.g); }
+    else if(a==="otra"||a==="retos") go("retos");
+    else if(a==="perfil") go("perfil");
+    else if(a==="salir") cerrarSesion();
+    else if(a==="sprev"){ S.sim.i--; render(); }
+    else if(a==="snext"){ S.sim.i++; render(); }
+    else if(a==="sfin"){ const sin=S.sim.resp.filter(r=>r===null).length; if(sin && !b.dataset.confirm){ b.dataset.confirm="1"; b.textContent=`Quedan ${sin} sin responder · tocar otra vez`; return; } terminarSim(); render(); }
+  });
+}
+
+/* ---------------- FONDO ANIMADO DEL LOGIN ---------------- */
+let fxRAF=null;
+function startFx(){
+  const cv=$("#bgfx"); if(!cv) return; const ctx=cv.getContext("2d"); const sy=["π","√","x²","∑","Δ","F=ma","A","B","C","D","★","+","÷","%","λ","∫"];
+  const cols=["#4D92F0","#6CC248","#F2B400","#E0352B","#FFFFFF"];
+  let W,H,P=[]; const fit=()=>{const r=cv.getBoundingClientRect();W=cv.width=r.width*devicePixelRatio;H=cv.height=r.height*devicePixelRatio;P=Array.from({length:Math.min(46,Math.round(W*H/52000))},()=>({x:Math.random()*W,y:Math.random()*H,s:(14+Math.random()*22)*devicePixelRatio,v:(.15+Math.random()*.35)*devicePixelRatio,t:sy[Math.floor(Math.random()*sy.length)],c:cols[Math.floor(Math.random()*cols.length)],a:.15+Math.random()*.35}))};
+  fit(); addEventListener("resize",fit);
+  const red=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const draw=()=>{ctx.clearRect(0,0,W,H);P.forEach(p=>{ctx.globalAlpha=p.a;ctx.fillStyle=p.c;ctx.font=`600 ${p.s}px Fredoka, sans-serif`;ctx.fillText(p.t,p.x,p.y);if(!red){p.y-=p.v;if(p.y<-40){p.y=H+20;p.x=Math.random()*W}}});if(!red)fxRAF=requestAnimationFrame(draw)};
+  cancelAnimationFrame(fxRAF); draw();
+}
+function stopFx(){ cancelAnimationFrame(fxRAF); fxRAF=null; }
+startFx();
+</script>
+</body>
+</html>
