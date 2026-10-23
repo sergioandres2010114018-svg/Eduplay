@@ -1,0 +1,78 @@
+name: Construir APK de EduPlay
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Preparar la app web
+        run: |
+          mkdir -p build/www
+          cp index.html manifest.json build/www/
+          cp -r assets js build/www/
+
+      - name: Crear el proyecto Android con Capacitor
+        working-directory: build
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "EduPlay" "co.edu.pijino.eduplay" --web-dir www
+          npx cap add android
+
+      - name: Poner el ícono y la pantalla de inicio de EduPlay
+        working-directory: build
+        run: |
+          RES=android/app/src/main/res
+          rm -rf $RES/mipmap-anydpi-v26
+          for d in $RES/mipmap-*; do
+            cp www/assets/icon-192.png $d/ic_launcher.png
+            cp www/assets/icon-192.png $d/ic_launcher_round.png
+            cp www/assets/icon-192.png $d/ic_launcher_foreground.png
+          done
+          sudo apt-get install -y imagemagick > /dev/null || true
+          if command -v convert > /dev/null; then
+            convert -size 1080x1920 xc:'#0E1A45' \( www/assets/icon-512.png -resize 520x520 \) -gravity center -composite splash.png
+            for f in $(find $RES -name 'splash.png'); do cp splash.png $f; done
+          fi
+
+      - name: Compilar el APK
+        working-directory: build/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../../EduPlay.apk
+
+      - name: Guardar el APK en Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: EduPlay-APK
+          path: EduPlay.apk
+
+      - name: Publicar el APK en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: EduPlay APK ${{ github.run_number }}
+          body: APK de EduPlay para instalar en Android. Descarga EduPlay.apk desde el celular y ábrelo.
+          files: EduPlay.apk
